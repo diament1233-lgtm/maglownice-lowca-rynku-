@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAGLOWNICE – ŁOWCA RYNKU</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080b12;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+
+    header {
+      padding: 22px 18px;
+      background: #0d111a;
+      border-bottom: 1px solid #202633;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .5px;
+    }
+
+    .logo span {
+      color: #35e38a;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 18px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg,#111827,#0b1220);
+      border: 1px solid #202b3c;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 27px;
+    }
+
+    .muted {
+      color: #8d98aa;
+      font-size: 14px;
+    }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      margin-bottom: 7px;
+      color: #b7c0cf;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 15px;
+      border-radius: 11px;
+      border: 1px solid #293448;
+      background: #080d16;
+      color: white;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #35e38a;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 15px;
+      border: 0;
+      border-radius: 11px;
+      background: #35e38a;
+      color: #06100b;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      background: #101621;
+      border: 1px solid #202a39;
+      border-radius: 14px;
+      padding: 15px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 21px;
+      margin-top: 5px;
+    }
+
+    .results {
+      display: grid;
+      gap: 12px;
+    }
+
+    .card {
+      background: #101621;
+      border: 1px solid #202a39;
+      border-radius: 15px;
+      padding: 16px;
+    }
+
+    .card h3 {
+      margin: 0 0 9px;
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    .price {
+      color: #35e38a;
+      font-size: 22px;
+      font-weight: 800;
+      margin: 8px 0;
+    }
+
+    .bargain {
+      display: inline-block;
+      background: #302515;
+      color: #ffc857;
+      padding: 5px 8px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .card a {
+      display: inline-block;
+      margin-top: 12px;
+      color: #63a4ff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .error {
+      background: #32191d;
+      border: 1px solid #743039;
+      color: #ff9da6;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 25px;
+      color: #9da8b9;
+    }
+
+    @media(max-width:600px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 23px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    MAGLOWNICE <span>– ŁOWCA RYNKU</span>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>🔎 Łowca okazji OLX</h1>
+    <div class="muted">
+      Wyszukuje oferty maglownic i pokazuje znalezione ceny.
+    </div>
+
+    <label>Model samochodu</label>
+    <input
+      id="model"
+      value="BMW F20"
+      placeholder="np. BMW F20">
+
+    <label>Numer OEM</label>
+    <input
+      id="oem"
+      value="32106861512"
+      placeholder="np. 32106861512">
+
+    <button id="searchBtn" onclick="searchMarket()">
+      🔎 SZUKAJ NA OLX
+    </button>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="stats">
+    <div class="stat">
+      Znalezionych ofert
+      <b id="count">0</b>
+    </div>
+
+    <div class="stat">
+      Najniższa cena
+      <b id="minPrice">—</b>
+    </div>
+
+    <div class="stat">
+      Średnia cena
+      <b id="avgPrice">—</b>
+    </div>
+  </div>
+
+  <div id="results" class="results"></div>
+
+</div>
+
+<script>
+async function searchMarket() {
+
+  const model = document.getElementById("model").value.trim();
+  const oem = document.getElementById("oem").value.trim();
+
+  const btn = document.getElementById("searchBtn");
+  const resultsBox = document.getElementById("results");
+  const message = document.getElementById("message");
+
+  if (!model && !oem) {
+    message.innerHTML =
+      '<div class="error">Wpisz model samochodu albo numer OEM.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "⏳ SZUKAM...";
+  resultsBox.innerHTML = '<div class="loading">Wyszukiwanie ofert OLX...</div>';
+  message.innerHTML = "";
+
+  const query =
+    [model, oem, "maglownica"].filter(Boolean).join(" ");
+
+  try {
+
+    const response = await fetch("/api/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        query: query
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Błąd wyszukiwania");
+    }
+
+    showResults(data.results || []);
+
+  } catch (error) {
+
+    message.innerHTML =
+      '<div class="error">❌ ' +
+      escapeHtml(error.message) +
+      '</div>';
+
+    resultsBox.innerHTML = "";
+
+  } finally {
+
+    btn.disabled = false;
+    btn.textContent = "🔎 SZUKAJ NA OLX";
+
+  }
+}
+
+
+function extractPrice(text) {
+
+  if (!text) return null;
+
+  const patterns = [
+    /(\d[\d\s]{0,7})\s*(?:zł|PLN)/gi,
+    /(\d[\d\s]{2,7})\s*(?:,-)/gi
+  ];
+
+  for (const regex of patterns) {
+
+    const match = regex.exec(text);
+
+    if (match) {
+
+      const number = parseInt(
+        match[1].replace(/\s/g, ""),
+        10
+      );
+
+      if (
+        number >= 10 &&
+        number <= 100000
+      ) {
+        return number;
+      }
+    }
+  }
+
+  return null;
+}
+
+
+function showResults(results) {
+
+  const resultsBox = document.getElementById("results");
+
+  let offers = results.map(item => {
+
+    const combined =
+      (item.title || "") + " " +
+      (item.snippet || "");
+
+    return {
+      ...item,
+      price: extractPrice(combined)
+    };
+
+  });
+
+  const prices = offers
+    .map(x => x.price)
+    .filter(x => Number.isFinite(x));
+
+  document.getElementById("count").textContent =
+    offers.length;
+
+  if (prices.length) {
+
+    const min = Math.min(...prices);
+
+    const avg =
+      prices.reduce((a,b) => a + b, 0) /
+      prices.length;
+
+    document.getElementById("minPrice").textContent =
+      formatPrice(min);
+
+    document.getElementById("avgPrice").textContent =
+      formatPrice(avg);
+
+    offers = offers.map(o => ({
+      ...o,
+      bargain: o.price !== null &&
+               o.price <= avg * 0.8
+    }));
+
+  } else {
+
+    document.getElementById("minPrice").textContent = "—";
+    document.getElementById("avgPrice").textContent = "—";
+  }
+
+  if (!offers.length) {
+
+    resultsBox.innerHTML =
+      '<div class="card">Nie znaleziono wyników.</div>';
+
+    return;
+  }
+
+  resultsBox.innerHTML = offers.map(item => {
+
+    const priceHtml = item.price
+      ? `<div class="price">${formatPrice(item.price)}</div>`
+      : `<div class="price">Cena niewidoczna</div>`;
+
+    const bargainHtml = item.bargain
+      ? `<span class="bargain">🔥 OKAZJA &gt;20%</span>`
+      : "";
+
+    return `
+      <div class="card">
+
+        <h3>${escapeHtml(item.title || "Oferta OLX")}</h3>
+
+        ${priceHtml}
+
+        ${bargainHtml}
+
+        <div class="muted">
+          ${escapeHtml(item.snippet || "")}
+        </div>
+
+        ${
+          item.link
+          ? `<a href="${escapeAttribute(item.link)}"
+                target="_blank"
+                rel="noopener">
+                Otwórz ofertę →
+             </a>`
+          : ""
+        }
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
+function formatPrice(value) {
+
+  return new Intl.NumberFormat("pl-PL", {
+    maximumFractionDigits: 0
+  }).format(value) + " zł";
+
+}
+
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+function escapeAttribute(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+
+}
+</script>
+
+</body>
+</html>
